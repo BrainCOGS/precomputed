@@ -4,8 +4,8 @@
 #SBATCH --nodes=1             # node count
 #SBATCH -n 1                 # number of cores
 #SBATCH -t 1                 # time (minutes)
-#SBATCH -o logs/precomputed_%j_step0.out        # STDOUT
-#SBATCH -e logs/precomputed_%j_step0.err        # STDERR
+#SBATCH -o logs/precomputed_step0_%j.out        # STDOUT
+#SBATCH -e logs/precomputed_step0_%j.err        # STDERR
 
 
 # start=$(date +%s.%N)

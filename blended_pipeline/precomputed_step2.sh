@@ -2,10 +2,10 @@
 #
 #SBATCH -p all                # partition (queue)
 #SBATCH --nodes=1             # node count
-#SBATCH -n 15                 # number of cores
-#SBATCH -t 5                 # time (minutes)
-#SBATCH -o logs/precomputed_%A_step2_%a.out        # STDOUT
-#SBATCH -e logs/precomputed_%A_step2_%a.err        # STDERR
+#SBATCH -n 13                 # number of cores
+#SBATCH -t 30                 # time (minutes)
+#SBATCH -o logs/precomputed_step2_%j.out        # STDOUT
+#SBATCH -e logs/precomputed_step2_%j.err        # STDERR
 
 
 # start=$(date +%s.%N)

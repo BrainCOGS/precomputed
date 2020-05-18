@@ -94,8 +94,6 @@ if __name__ == "__main__":
     """ First command line arguments """
     step = sys.argv[1]
     viz_dir = sys.argv[2]
-    """ Job id """
-    jobid = int(os.environ["SLURM_ARRAY_TASK_ID"])
     """ Load param dictionary """
     param_file = viz_dir + '/precomputed_params.p'
     with open(param_file,'rb') as pkl_file:
@@ -127,30 +125,28 @@ if __name__ == "__main__":
     """ Handle the different steps """
     if step == 'step0':
         print("step 0")
-        print(f"array job: {jobid}")
         volume_size = (x_dim,y_dim,z_dim)
         resolution = (x_scale_nm,y_scale_nm,z_scale_nm)
         vol = make_info_file(volume_size=volume_size,layer_dir=layer_dir,resolution=resolution)
     elif step == 'step1':
         print("step 1")
-        print(f"array job: {jobid}")
         all_slices = glob.glob(f"{terastitcher_output_dir}/*tif") # All of the output terastitcher files 
         sorted_files = sorted(all_slices)
         vol = CloudVolume(f'file://{layer_dir}')
-        processes=[process_slice(job) for job in [(jobid*slurmjobfactor)+x for x in range(slurmjobfactor)] if job<len(sorted_files)] #submits sequential jobs in range starting at arrayid for length slurmfactor
-        vol.cache.flush()
+        done_files = set([ int(z) for z in os.listdir(progress_dir)])
+        all_files = set(range(vol.bounds.minpt.z,vol.bounds.maxpt.z))
+        to_upload = [ int(z) for z in list(all_files.difference(done_files)) ]
+        to_upload.sort()
+        print(f"Have {len(to_upload)} slices remaining to upload",to_upload)
+        with ProcessPoolExecutor(max_workers=12) as executor:
+            for job in executor.map(process_slice,to_upload):
+                try:
+                    print(job)
+                except Exception as exc:
+                    print(f'generated an exception: {exc}')
     elif step == 'step2': # downsampling
         print("step 2")
-        print(f"array job: {jobid}")
         vol = CloudVolume(f'file://{layer_dir}')
-        tasks = make_downsample_tasks(vol,mip_start=0,num_mips=4)
-        task_list = list(tasks)
-        n_tasks_total = len(task_list)
-        print("There are {n_tasks_total} total tasks")
-        job_list = [(jobid*slurmjobfactor)+x for x in range(slurmjobfactor) if (jobid*slurmjobfactor+x)<len(task_list)]
-        print("Processing job numbers:")
-        print(job_list)
-        with LocalTaskQueue(parallel=1) as tq:
-            [tq.insert(task_list[job]) for job in job_list] # submits sequential jobs in range starting at jobid for length slurmjobfactor
-
-
+        with LocalTaskQueue(parallel=12) as tq:
+            tasks = make_downsample_tasks(vol,mip_start=0,num_mips=4)
+            tq.insert_all(tasks)
