@@ -109,8 +109,8 @@ if __name__ == "__main__":
     """ Make progress dir """
     progress_dir = mkdir(viz_dir + f'/progress_{layer_name}') # unlike os.mkdir doesn't crash on prexisting 
     """ Figure out volume size in pixels and in nanometers """
-    x_dim = 2160
-    y_dim = 2560
+    x_dim = param_dict['x_dim']
+    y_dim = param_dict['y_dim']
     z_dim = param_dict['number_of_z_planes']
     if image_resolution == '4x':
         x_scale_nm, y_scale_nm = 1630,1630
