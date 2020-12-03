@@ -104,6 +104,7 @@ if __name__ == "__main__":
     image_resolution = param_dict['image_resolution']
     channel_index = param_dict['channel_index']
     lightsheet = param_dict['lightsheet']
+    lightsheet_index_code = param_dict['lightsheet_index_code']
     z_scale_nm = int(float(param_dict['z_step'])*1000) # to convert from microns to nm
     layer_dir = os.path.join(viz_dir,layer_name)
     """ Make progress dir """
@@ -130,12 +131,9 @@ if __name__ == "__main__":
     elif step == 'step1':
         print("step 1")
         # Look for 00 x 00 tiles since this pipeline is only for non-tiled images with Filter000{channel_index} since there could be multi-channel imaging
-        if lightsheet == 'left':
-            all_slices = glob.glob(f"{rawdata_path}/*RawDataStack[00 x 00*C00*Filter000{channel_index}*tif") 
-        elif lightsheet == 'right':
-            all_slices = glob.glob(f"{rawdata_path}/*RawDataStack[00 x 00*C01*Filter000{channel_index}*tif") 
-        else:
-            sys.exit("'lightsheet' parameter in param_dict not 'left' or 'right' ")
+        print("using lightsheet_index_code:",lightsheet_index_code)
+        all_slices = glob.glob(
+            f"{rawdata_path}/*RawDataStack[00 x 00*{lightsheet_index_code}*Filter000{channel_index}*tif") 
         sorted_files = sorted(all_slices)
         vol = CloudVolume(f'file://{layer_dir}')
         done_files = set([ int(z) for z in os.listdir(progress_dir)])
