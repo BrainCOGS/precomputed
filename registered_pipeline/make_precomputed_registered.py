@@ -19,7 +19,7 @@ import pickle
 from taskqueue import LocalTaskQueue
 import igneous.task_creation as tc
 
-def make_info_file(volume_size,resolution,layer_dir,commit=True):
+def make_info_file(volume_size,resolution,layer_dir,commit=True,atlas_name='allen'):
     """ 
     ---PURPOSE---
     Make the cloudvolume info file.
@@ -29,16 +29,28 @@ def make_info_file(volume_size,resolution,layer_dir,commit=True):
     commit          if True, will write the info/provenance file to disk. 
                     if False, just creates it in memory
     """
-    info = CloudVolume.create_new_info(
+    if atlas_type == 'paxinos':
+        info = CloudVolume.create_new_info(
         num_channels = 1,
-        layer_type = 'image', # 'image' or 'segmentation'
+        layer_type = 'segmentation', # 'image' or 'segmentation'
         data_type = 'uint16', # 
         encoding = 'raw', # other options: 'jpeg', 'compressed_segmentation' (req. uint32 or uint64)
         resolution = resolution, # Size of X,Y,Z pixels in nanometers, 
         voxel_offset = [ 0, 0, 0 ], # values X,Y,Z values in voxels
-        chunk_size = [ 1024,1024,1 ], # rechunk of image X,Y,Z in voxels -- only used for downsampling task I think
+        chunk_size = [1024,1,1024 ], 
         volume_size = volume_size, # X,Y,Z size in voxels
         )
+    else:
+        info = CloudVolume.create_new_info(
+            num_channels = 1,
+            layer_type = 'image', # 'image' or 'segmentation'
+            data_type = 'uint16', # 
+            encoding = 'raw', # other options: 'jpeg', 'compressed_segmentation' (req. uint32 or uint64)
+            resolution = resolution, # Size of X,Y,Z pixels in nanometers, 
+            voxel_offset = [ 0, 0, 0 ], # values X,Y,Z values in voxels
+            chunk_size = [ 1024,1024,1 ], # rechunk of image X,Y,Z in voxels -- only used for downsampling task I think
+            volume_size = volume_size, # X,Y,Z size in voxels
+            )
 
     vol = CloudVolume(f'file://{layer_dir}', info=info)
     vol.provenance.description = "Test on spock for profiling precomputed creation"
@@ -60,6 +72,19 @@ def process_slice(z):
     array = registered_vol[z].reshape((1,y_dim,x_dim)).T
     vol[:,:, z] = array
     touch(os.path.join(progress_dir, str(z)))
+    return "success"
+
+def process_paxinos_slice(y):
+    if os.path.exists(os.path.join(progress_dir, str(y))):
+        print(f"Slice {y} already processed, skipping ")
+        return
+    if y >= y_dim:
+        print("Index {y} >= y_dim of volume, skipping")
+        return
+    print('Processing slice y=',y)
+    array = registered_vol[:,y,:].reshape((z_dim,1,x_dim)).T
+    vol[:,y,:] = array
+    touch(os.path.join(progress_dir, str(y)))
     return "success"
 
 if __name__ == "__main__":
@@ -115,20 +140,35 @@ if __name__ == "__main__":
         print("step 0")
         volume_size = (x_dim,y_dim,z_dim)
         resolution = (x_scale_nm,y_scale_nm,z_scale_nm)
-        vol = make_info_file(volume_size=volume_size,layer_dir=layer_dir,resolution=resolution)
+
+        vol = make_info_file(volume_size=volume_size,
+            layer_dir=layer_dir,
+            resolution=resolution,
+            atlas_name=atlas_name.lower())
     elif step == 'step1':
         print("step 1")
         vol = CloudVolume(f'file://{layer_dir}')
-        
+        if atlas_name == 'paxinos':
+            done_files = set([ int(y) for y in os.listdir(progress_dir) ])
+            all_files = set(range(vol.bounds.minpt.y, vol.bounds.maxpt.y)) 
+            to_upload = [ int(y) for y in list(all_files.difference(done_files)) ]
         done_files = set([ int(z) for z in os.listdir(progress_dir)])
         all_files = set(range(vol.bounds.minpt.z,vol.bounds.maxpt.z))
         to_upload = [ int(z) for z in list(all_files.difference(done_files)) ]
         to_upload.sort()
         print("Have {len(to_upload)} slices remaining to upload",to_upload)
-        with ProcessPoolExecutor(max_workers=4) as executor:
-            for job in executor.map(process_slice,to_upload):
-                try:
-                    print(job)
-                except Exception as exc:
-                    print(f'generated an exception: {exc}')
+        if atlas_name == 'paxinos':
+            with ProcessPoolExecutor(max_workers=4) as executor:
+                for job in executor.map(process_paxinos_slice,to_upload):
+                    try:
+                        print(job)
+                    except Exception as exc:
+                        print(f'generated an exception: {exc}')
+        else:
+            with ProcessPoolExecutor(max_workers=4) as executor:
+                for job in executor.map(process_slice,to_upload):
+                    try:
+                        print(job)
+                    except Exception as exc:
+                        print(f'generated an exception: {exc}')
 
