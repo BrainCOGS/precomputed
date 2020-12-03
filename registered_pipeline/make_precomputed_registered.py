@@ -108,7 +108,8 @@ if __name__ == "__main__":
         x_scale_nm, y_scale_nm, z_scale_nm = 20000,20000,20000
     elif 'allen' in atlas_name.lower():
         x_scale_nm, y_scale_nm, z_scale_nm = 25000,25000,25000
-    
+    elif 'paxinos' in atlas_name.lower():
+        x_scale_nm, y_scale_nm, z_scale_nm = 10000,100000,10000 # 10x100x10 micron resolution 
     """ Handle the different steps """
     if step == 'step0':
         print("step 0")
