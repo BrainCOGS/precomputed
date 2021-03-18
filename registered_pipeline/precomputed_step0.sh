@@ -2,7 +2,7 @@
 #
 #SBATCH -p all                # partition (queue)
 #SBATCH --nodes=1             # node count
-#SBATCH -n 4                 # number of cores
+#SBATCH -n 1                 # number of cores
 #SBATCH -t 1                 # time (minutes)
 #SBATCH -o logs/precomputed_step0_%j.out        # STDOUT
 #SBATCH -e logs/precomputed_step0_%j.err        # STDERR

@@ -28,11 +28,12 @@ def make_info_file(volume_size,resolution,layer_dir,commit=True,atlas_name='alle
     pix_scale_nm    [size of x pix in nm,size of y pix in nm,size of z pix in nm], e.g. [5000,5000,10000]
     commit          if True, will write the info/provenance file to disk. 
                     if False, just creates it in memory
+    atlas_name      'allen', 'paxinos','princeton'
     """
-    if atlas_type == 'paxinos':
+    if atlas_name == 'paxinos':
         info = CloudVolume.create_new_info(
         num_channels = 1,
-        layer_type = 'segmentation', # 'image' or 'segmentation'
+        layer_type = 'image', # 'image' or 'segmentation'
         data_type = 'uint16', # 
         encoding = 'raw', # other options: 'jpeg', 'compressed_segmentation' (req. uint32 or uint64)
         resolution = resolution, # Size of X,Y,Z pixels in nanometers, 
@@ -91,7 +92,6 @@ if __name__ == "__main__":
     """ First command line arguments """
     step = sys.argv[1]
     viz_dir = sys.argv[2]
-    """ Job id """
     """ Load param dictionary """
     param_file = viz_dir + '/precomputed_params.p'
     with open(param_file,'rb') as pkl_file:
@@ -135,6 +135,7 @@ if __name__ == "__main__":
         x_scale_nm, y_scale_nm, z_scale_nm = 25000,25000,25000
     elif 'paxinos' in atlas_name.lower():
         x_scale_nm, y_scale_nm, z_scale_nm = 10000,100000,10000 # 10x100x10 micron resolution 
+    
     """ Handle the different steps """
     if step == 'step0':
         print("step 0")
