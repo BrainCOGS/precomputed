@@ -3,7 +3,7 @@
 #SBATCH -p all                # partition (queue)
 #SBATCH --nodes=1             # node count
 #SBATCH -n 8                 # number of cores
-#SBATCH -t 100                 # time (minutes)
+#SBATCH -t 60                 # time (minutes)
 #SBATCH -o logs/precomputed_atlas_step1_%j.out        # STDOUT
 #SBATCH -e logs/precomputed_atlas_step1_%j.err        # STDERR
 

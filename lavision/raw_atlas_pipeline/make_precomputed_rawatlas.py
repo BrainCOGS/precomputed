@@ -89,7 +89,7 @@ if __name__ == "__main__":
     if cpus > 16:
         cpus = 16
 
-    layer_name = f"{sample_name}_raw_atlas"
+    layer_name = f"raw_atlas"
     # Make directories for orig layer, destination layer 
     # orig - just for uploading mip=-1
     orig_layer_name = layer_name + '_rechunkme'
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     x_dim,y_dim = first_im.size
     first_im.close()
     z_dim = len(all_slices)    
-    z_scale_nm = int(round(z_step_microns*1000))
+    z_scale_nm = int(z_step_microns)*1000
     if image_resolution == "1.3x":
         x_scale_nm,y_scale_nm = 5000,5000
     else:
