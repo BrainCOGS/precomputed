@@ -19,7 +19,7 @@ from taskqueue import LocalTaskQueue
 import igneous.task_creation as tc
 from precomputed_utils import calculate_chunks, calculate_factors
 
-def make_info_file(volume_size,resolution,layer_dir,commit=True):
+def make_info_file(volume_size,resolution,layer_dir,commit=True,atlas_type=None):
     """ 
     ---PURPOSE---
     Make the cloudvolume info file.
@@ -31,7 +31,7 @@ def make_info_file(volume_size,resolution,layer_dir,commit=True):
     """
     info = CloudVolume.create_new_info(
         num_channels = 1,
-        layer_type = 'image', # 'image' or 'segmentation'
+        layer_type = 'segmentation', # 'image' or 'segmentation'
         data_type = 'uint16', # 
         encoding = 'raw', # other options: 'jpeg', 'compressed_segmentation' (req. uint32 or uint64)
         resolution = resolution, # Size of X,Y,Z pixels in nanometers, 
@@ -47,6 +47,15 @@ def make_info_file(volume_size,resolution,layer_dir,commit=True):
         vol.commit_info() # generates info json file
         vol.commit_provenance() # generates provenance json file
         print("Created CloudVolume info file: ",vol.info_cloudpath)
+    if atlas_type:
+        assert atlas_type in ['Princeton','Allen']
+        info_dict = vol.info
+        info_dict['atlas_type'] = atlas_type
+        print(info_dict)
+        info_filename = '/'.join(vol.info_cloudpath.split('/')[2:]) 
+        with open(info_filename,'w') as outfile:
+            json.dump(info_dict,outfile,sort_keys=True,indent=2)
+        print("ammended info file to include 'atlas_type' key")
     return vol
 
 def process_slice(z):
@@ -60,28 +69,28 @@ def process_slice(z):
     img_name = sorted_files[z]
     image = Image.open(img_name)
     width, height = image.size 
-    array = np.array(image, dtype=np.uint16, order='F')
+    array = np.flipud(np.array(image, dtype=np.uint16, order='F'))
     array = array.reshape((1, height, width)).T
     vol[:,:, z] = array
     image.close()
     touch(os.path.join(progress_dir, str(z)))
-    return "success"
+    print("success")
+    return
 
 if __name__ == "__main__":
     """ First command line arguments """
-    step = sys.argv[1]
-    viz_dir = sys.argv[2]
-    
-    """ Load param dictionary """
-    param_file = viz_dir + '/precomputed_params.p'
-    with open(param_file,'rb') as pkl_file:
-        param_dict = pickle.load(pkl_file)
-    blended_data_path = param_dict['blended_data_path']
-    layer_name = param_dict['layer_name']
-    image_resolution = param_dict['image_resolution']
-    if image_resolution != "3.6x":
-        sys.exit("Image resolution must be 3.6x. Instead it is {image_resolution} which is not supported")
-    z_scale_nm = int(float(param_dict['z_step'])*1000) # to convert from microns to nm. Most likely 2 microns for 3.6x
+    step = sys.argv[1] # "step0", "step1", "step2" or "step3"
+    sample_name = sys.argv[2] # e.g. "zimmerman_02-f12"
+    raw_atlas_dir = sys.argv[3] # Path to single_tifs directory
+    assert os.path.exists(raw_atlas_dir)
+    viz_dir = os.path.join('/jukebox/LightSheetData/lightserv/cz15/zimmerman_02',
+        sample_name,'imaging_request_1','viz','raw_atlas')
+    mkdir(viz_dir) # does not crash on prexisting
+    cpus = os.cpu_count()
+    if cpus > 16:
+        cpus = 16
+
+    layer_name = f"{sample_name}_raw_atlas"
     
     # Make directories for orig layer, destination layer 
     # orig - just for uploading mip=-1
@@ -95,15 +104,14 @@ if __name__ == "__main__":
     mkdir(dest_layer_dir)
     rechunked_cloudpath = f'file://{dest_layer_dir}'
     # Figure out volume size in pixels and in nanometers
-    all_slices = glob.glob(f"{blended_data_path}/*tif")  
+    all_slices = glob.glob(f"{raw_atlas_dir}/*tif")  
     assert len(all_slices) > 0
     random_slice = all_slices[0]
-    random_im = Image.open(random_slice)
-    x_dim,y_dim = random_im.size
-    random_im.close()
+    first_im = Image.open(random_slice)
+    x_dim,y_dim = first_im.size
+    first_im.close()
     z_dim = len(all_slices)    
-    if image_resolution == "3.6x":
-        x_scale_nm, y_scale_nm = 1800,1800 
+    x_scale_nm, y_scale_nm, z_scale_nm = 1800,1800,2000 
 
     # Handle the different steps 
     if step == 'step0':
@@ -123,7 +131,7 @@ if __name__ == "__main__":
         to_upload = [ int(z) for z in list(all_files.difference(done_files)) ]
         to_upload.sort()
         print(f"Have {len(to_upload)} planes to upload")
-        with ProcessPoolExecutor(max_workers=24) as executor:
+        with ProcessPoolExecutor(max_workers=cpus) as executor:
             for job in executor.map(process_slice,to_upload):
                 try:
                     print(job)
@@ -132,8 +140,7 @@ if __name__ == "__main__":
     elif step == 'step2': # transfer tasks
         orig_vol = CloudVolume(f'file://{orig_layer_dir}')
         first_chunk = calculate_chunks(downsample='full',mip=0)
-        
-        tq = LocalTaskQueue(parallel=24)
+        tq = LocalTaskQueue(parallel=cpus)
 
         tasks = tc.create_transfer_tasks(orig_vol.cloudpath, dest_layer_path=rechunked_cloudpath, 
             chunk_size=first_chunk, mip=0, skip_downsamples=True)
@@ -143,7 +150,7 @@ if __name__ == "__main__":
 
     elif step == 'step3': # downsampling
         print("step 3, downsampling")
-        tq = LocalTaskQueue(parallel=24)
+        tq = LocalTaskQueue(parallel=cpus)
         downsample="full"
         mips = [0,1,2,3,4]
         for mip in mips:

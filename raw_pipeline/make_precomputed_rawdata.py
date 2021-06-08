@@ -133,7 +133,7 @@ if __name__ == "__main__":
         # Look for 00 x 00 tiles since this pipeline is only for non-tiled images with Filter000{channel_index} since there could be multi-channel imaging
         print("using lightsheet_index_code:",lightsheet_index_code)
         all_slices = glob.glob(
-            f"{rawdata_path}/*RawDataStack[00 x 00*{lightsheet_index_code}*Filter000{channel_index}*tif") 
+            f"{rawdata_path}/*RawDataStack*{lightsheet_index_code}*Filter000{channel_index}*tif") 
         sorted_files = sorted(all_slices)
         vol = CloudVolume(f'file://{layer_dir}')
         done_files = set([ int(z) for z in os.listdir(progress_dir)])

@@ -2,10 +2,10 @@
 #
 #SBATCH -p all                # partition (queue)
 #SBATCH --nodes=1             # node count
-#SBATCH -n 16                 # number of cores
-#SBATCH -t 30                 # time (minutes)
-#SBATCH -o logs/precomputed_step1_%j.out        # STDOUT
-#SBATCH -e logs/precomputed_step1_%j.err        # STDERR
+#SBATCH -n 10                 # number of cores
+#SBATCH -t 150                 # time (minutes)
+#SBATCH -o logs/precomputed_atlas_step2_%j.out        # STDOUT
+#SBATCH -e logs/precomputed_atlas_step2_%j.err        # STDERR
 
 
 # start=$(date +%s.%N)
@@ -19,9 +19,9 @@
 # echo "Array Allocation Number: $SLURM_ARRAY_JOB_ID"
 # echo "Array Index: $SLURM_ARRAY_TASK_ID"
 
-module load anacondapy/2020.11
+module load anacondapy/5.3.1
 . activate precomputed
-xvfb-run -d python make_precomputed_blended.py step1 ${viz_dir}
+xvfb-run -d python make_precomputed_rawatlas.py step2 ${brain}
 
 # finish=$(date +%s.%N)
 # echo "$finish $start" | awk '{print "took " $1-$2 " seconds"}'
