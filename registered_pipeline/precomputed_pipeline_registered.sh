@@ -1,7 +1,7 @@
 #!/bin/env bash
 #
 
-viz_dir=$1
+viz_dir='/jukebox/LightSheetData/lightserv/oostland/MO_May2021_Tsc1_part1/MO_May2021_Tsc1_part1-520/imaging_request_1/viz/processing_request_1/registered/channel_555_injch/'
 
 # echo "In the directory: `pwd` "
 # echo "As the user: `whoami` "
