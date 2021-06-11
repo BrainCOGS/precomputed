@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
     layer_name = param_dict['layer_name']
     layer_dir = os.path.join(viz_dir,layer_name)
-    # mkdir(layer_dir)
+    mkdir(layer_dir)
     """ Make progress dir """
     progress_dir = mkdir(viz_dir + f'/progress_{layer_name}') # unlike os.mkdir doesn't crash on prexisting 
 
