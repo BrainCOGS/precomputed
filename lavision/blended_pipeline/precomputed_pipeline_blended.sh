@@ -7,7 +7,7 @@ viz_dir=$1
 # echo "As the user: `whoami` "
 # echo "on host: `hostname` "
 # echo "Viz_dir: ${viz_dir}"
-Make info file and layer directory
+# Make info file and layer directory
 OUT0=$(sbatch --parsable --export=ALL,viz_dir=${viz_dir} precomputed_step0.sh) 
 echo $OUT0
 
