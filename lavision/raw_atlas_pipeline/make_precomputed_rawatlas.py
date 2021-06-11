@@ -143,6 +143,7 @@ if __name__ == "__main__":
     elif step == 'step2': # transfer tasks
         orig_vol = CloudVolume(f'file://{orig_layer_dir}')
         first_chunk = calculate_chunks(downsample='full',mip=0)
+        first_chunk = [int(x) for x in first_chunk]
         tq = LocalTaskQueue(parallel=cpus)
 
         tasks = tc.create_transfer_tasks(orig_vol.cloudpath, dest_layer_path=rechunked_cloudpath, 

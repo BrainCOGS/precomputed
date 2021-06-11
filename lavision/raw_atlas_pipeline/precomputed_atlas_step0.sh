@@ -22,8 +22,8 @@ echo "Raw atlas dir: ${raw_atlas_dir}"
 echo "Viz_dir: ${viz_dir}"
 
 
-module load anacondapy/5.3.1
-. activate precomputed
+module load anacondapy/2020.11
+. activate precomputed_test
 xvfb-run -d python make_precomputed_rawatlas.py step0 ${raw_atlas_dir} ${viz_dir} ${z_step_microns}
 
 # finish=$(date +%s.%N)

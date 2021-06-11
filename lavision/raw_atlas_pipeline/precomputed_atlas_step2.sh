@@ -2,8 +2,8 @@
 #
 #SBATCH -p all                # partition (queue)
 #SBATCH --nodes=1             # node count
-#SBATCH -n 8                 # number of cores
-#SBATCH -t 150                 # time (minutes)
+#SBATCH -n 4                 # number of cores
+#SBATCH -t 15                # time (minutes)
 #SBATCH -o logs/precomputed_atlas_step2_%j.out        # STDOUT
 #SBATCH -e logs/precomputed_atlas_step2_%j.err        # STDERR
 
@@ -19,8 +19,8 @@
 # echo "Array Allocation Number: $SLURM_ARRAY_JOB_ID"
 # echo "Array Index: $SLURM_ARRAY_TASK_ID"
 
-module load anacondapy/5.3.1
-. activate precomputed
+module load anacondapy/2020.11
+. activate precomputed_test
 xvfb-run -d python make_precomputed_rawatlas.py step2 ${raw_atlas_dir} ${viz_dir} ${z_step_microns}
 
 # finish=$(date +%s.%N)
