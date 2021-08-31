@@ -21,7 +21,7 @@
 
 echo "Viz_dir: ${viz_dir}"
 
-module load anacondapy/5.3.1
+module load anacondapy/2020.11
 . activate precomputed
 xvfb-run -d python make_precomputed_rawdata.py step0 ${viz_dir}
 

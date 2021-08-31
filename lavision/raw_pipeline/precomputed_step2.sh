@@ -18,7 +18,7 @@
 # echo "Array Allocation Number: $SLURM_ARRAY_JOB_ID"
 # echo "Array Index: $SLURM_ARRAY_TASK_ID"
 
-module load anacondapy/5.3.1
+module load anacondapy/2020.11
 . activate precomputed
 xvfb-run -d python make_precomputed_rawdata.py step2 ${viz_dir}
 
