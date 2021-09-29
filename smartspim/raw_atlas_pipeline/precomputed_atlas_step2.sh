@@ -2,7 +2,7 @@
 #
 #SBATCH -p all                # partition (queue)
 #SBATCH --nodes=1             # node count
-#SBATCH -n 10                 # number of cores
+#SBATCH -n 12                 # number of cores
 #SBATCH -t 150                 # time (minutes)
 #SBATCH -o logs/precomputed_atlas_step2_%j.out        # STDOUT
 #SBATCH -e logs/precomputed_atlas_step2_%j.err        # STDERR
@@ -21,7 +21,7 @@
 
 module load anacondapy/5.3.1
 . activate precomputed
-xvfb-run -d python make_precomputed_rawatlas.py step2 ${brain}
+xvfb-run -d python make_precomputed_rawatlas.py step2 ${brain} ${raw_atlas_dir}
 
 # finish=$(date +%s.%N)
 # echo "$finish $start" | awk '{print "took " $1-$2 " seconds"}'

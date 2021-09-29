@@ -80,17 +80,17 @@ def process_slice(z):
 if __name__ == "__main__":
     """ First command line arguments """
     step = sys.argv[1] # "step0", "step1", "step2" or "step3"
-    sample_name = sys.argv[2] # e.g. "zimmerman_02-f12"
+    brain = sys.argv[2] # e.g. "zimmerman_02-f12"
     raw_atlas_dir = sys.argv[3] # Path to single_tifs directory
+    viz_dir = sys.argv[4]
     assert os.path.exists(raw_atlas_dir)
-    viz_dir = os.path.join('/jukebox/LightSheetData/lightserv/cz15/zimmerman_02',
-        sample_name,'imaging_request_1','viz','raw_atlas')
+    
     mkdir(viz_dir) # does not crash on prexisting
     cpus = os.cpu_count()
     if cpus > 16:
         cpus = 16
 
-    layer_name = f"{sample_name}_raw_atlas"
+    layer_name = f"{brain}_raw_atlas"
     
     # Make directories for orig layer, destination layer 
     # orig - just for uploading mip=-1

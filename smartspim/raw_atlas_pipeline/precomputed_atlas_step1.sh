@@ -21,7 +21,7 @@
 
 module load anacondapy/5.3.1
 . activate precomputed
-xvfb-run -d python make_precomputed_rawatlas.py step1 ${brain}
+xvfb-run -d python make_precomputed_rawatlas.py step1 ${brain} ${raw_atlas_dir}
 
 # finish=$(date +%s.%N)
 # echo "$finish $start" | awk '{print "took " $1-$2 " seconds"}'
