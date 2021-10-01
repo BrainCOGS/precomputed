@@ -69,7 +69,7 @@ def process_slice(z):
     img_name = sorted_files[z]
     image = Image.open(img_name)
     width, height = image.size 
-    array = np.flipud(np.array(image, dtype=np.uint16, order='F'))
+    array = np.array(image, dtype=np.uint16, order='F')
     array = array.reshape((1, height, width)).T
     vol[:,:, z] = array
     image.close()
