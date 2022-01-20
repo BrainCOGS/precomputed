@@ -6,7 +6,8 @@ from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
 # from PIL import Image
-import SimpleITK as sitk
+# import SimpleITK as sitk
+import tifffile
 
 from cloudvolume import CloudVolume
 from cloudvolume.lib import mkdir, touch
@@ -17,7 +18,6 @@ import time
 import pickle
 
 from taskqueue import LocalTaskQueue
-import igneous.task_creation as tc
 
 def make_info_file(volume_size,resolution,layer_dir,commit=True,atlas_name='allen'):
     """ 
@@ -123,8 +123,7 @@ if __name__ == "__main__":
         path_to_registered_volume = os.path.join(
             registered_data_path,rawdata_subfolder+f'_resized_ch{channel_index_padded}','result.tif')
     """ Figure out volume size in pixels and in nanometers """
-    registered_vol = np.array(sitk.GetArrayFromImage(sitk.ReadImage(path_to_registered_volume)),
-            dtype=np.uint16,order='F')
+    registered_vol = tifffile.imread(path_to_registered_volume).astype('uint16')
     z_dim,y_dim,x_dim = registered_vol.shape
     print(x_dim,y_dim,z_dim)
 
