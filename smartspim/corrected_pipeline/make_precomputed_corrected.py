@@ -17,7 +17,7 @@ import pickle
 
 from taskqueue import LocalTaskQueue
 import igneous.task_creation as tc
-from precomputed_utils import calculate_chunks, calculate_factors
+from precomputed_utils import calculate_chunks, calculate_factors, determine_factors
 
 def make_info_file(volume_size,resolution,layer_dir,commit=True):
     """ 
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     random_im.close()
     z_dim = len(all_slices)    
     if image_resolution == "3.6x":
-        x_scale_nm, y_scale_nm = 1800,1800 
+        x_scale_nm, y_scale_nm = 1866,1866 
 
     # Handle the different steps 
     if step == 'step0':
@@ -138,9 +138,11 @@ if __name__ == "__main__":
                     print(job)
                 except Exception as exc:
                     print(f'generated an exception: {exc}')
+
     elif step == 'step2': # transfer tasks
         orig_vol = CloudVolume(f'file://{orig_layer_dir}')
-        first_chunk = calculate_chunks(downsample='full',mip=0)
+        # makes a new layer with mip=0 chunks of size: [128,128,64] 
+        first_chunk = calculate_chunks(downsample='full',mip=0) 
         tq = LocalTaskQueue(parallel=cpus)
 
         tasks = tc.create_transfer_tasks(orig_vol.cloudpath, dest_layer_path=rechunked_cloudpath, 
@@ -153,19 +155,22 @@ if __name__ == "__main__":
         print("step 3, downsampling")
         tq = LocalTaskQueue(parallel=cpus)
         downsample="full"
-        mips = [0,1,2,3,4]
+        mips = [0,1,2,3,4] # At each mip level, create the next mip level. That's why 0 is in the list
+        downsampling_factors = determine_factors([x_dim,y_dim,z_dim])
         for mip in mips:
             print(f"Mip: {mip}")
-            cv = CloudVolume(rechunked_cloudpath, mip)
-            chunks = calculate_chunks(downsample, mip)
-            factors = calculate_factors(downsample, mip)
+            factors = downsampling_factors[mip+1]
+            if mip == 0:
+                chunks = calculate_chunks(downsample='full',mip=0) # to make sure it has same size as what we used when we made the new layer
+            else:
+                chunks = [64*x for x in factors]
             print(f"Chunk size: {chunks}")
             print(f"Downsample factors: {factors}")
+            cv = CloudVolume(rechunked_cloudpath, mip)
             tasks = tc.create_downsampling_tasks(cv.layer_cloudpath, 
                 mip=mip, num_mips=1, factor=factors, preserve_chunk_size=False,
                 compress=True, chunk_size=chunks)
             tq.insert(tasks)
             tq.execute()
             print()
-
 
