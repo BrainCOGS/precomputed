@@ -19,9 +19,9 @@
 # echo "Array Allocation Number: $SLURM_ARRAY_JOB_ID"
 # echo "Array Index: $SLURM_ARRAY_TASK_ID"
 
-module load anacondapy/5.3.1
+module load anacondapy/2020.11
 . activate precomputed
-xvfb-run -d python make_precomputed_rawatlas.py step2 ${brain} ${raw_atlas_dir}
+xvfb-run -d python make_precomputed_rawatlas.py step2 ${brain} ${raw_atlas_dir} ${viz_dir}
 
 # finish=$(date +%s.%N)
 # echo "$finish $start" | awk '{print "took " $1-$2 " seconds"}'
