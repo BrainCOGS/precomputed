@@ -10,11 +10,8 @@ I use a conda environment set up in the following way:
 conda create --name precomputed python=3.8 
 conda activate precomputed # go into the environment
 pip install numpy cloud-volume neuroglancer
-# get igneous - needed for meshing and downsampling, not available via pip
-git clone https://github.com/seung-lab/igneous.git
-cd igneous/
-pip install -r requirements.txt
-python setup.py develop
+# get igneous - needed for meshing and downsampling
+pip install igneous-pipeline
 # Get jupyter notebooks to work with this environment
 pip install --user ipykernel
 python -m ipykernel install --user --name=precomputed
